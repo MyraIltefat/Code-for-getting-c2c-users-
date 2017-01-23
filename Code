@@ -1,0 +1,22 @@
+SELECT z.date_serp, z.city, count(DISTINCT z.listing_id) as NNL, count(distinct z.seller) as DUL,count(DISTINCT case when z.category_site='buy-plots' then z.listing_id end) as NNL_buy_plots,count(DISTINCT case when z.category_site='rent-homes' then z.listing_id END ) as NNL_rent_homes,count(DISTINCT case when z.category_site='buy-homes' then z.listing_id END ) as NNL_buy_homes,count(DISTINCT case when z.category_site='rent-plots' then z.listing_id END ) as NNL_rent_plots,count(DISTINCT case when category_site='buy-commercial' then z.listing_id END ) as NNL_buy_commercials,count(DISTINCT case when z.category_site='rent-commercial' then z.listing_id END ) as NNL_rent_commercial
+FROM (
+SELECT
+  n.listing_id, MAX(m.seller_id) as seller, MIN(n.date_serp) as date_serp, n.category_site, n.city
+  from listing_site_259 n
+    LEFT JOIN (SELECT
+  l.seller_id,
+  count(DISTINCT case when min_date >= '2016-09-01' then k.listing_id end ) as ads
+  from listing_site_259 l
+    LEFT JOIN
+(SELECT
+  listing_id,
+  min(date_serp) as min_date
+ from listing_site_259
+where first_encounter =1
+group by 1) k ON k.listing_id = l.listing_id
+          GROUP BY 1) m ON n.seller_id = m.seller_id
+  WHERE first_encounter = 1
+     AND n.date_serp >= '2016-11-01'
+     AND m.ads <3
+  GROUP BY 1) z
+GROUP BY 1,2
